@@ -4,12 +4,12 @@ struct Position {
 }
 
 pub struct Spot {
-    piece: Box<dyn Piece>,
+    piece: Option<Box<dyn Piece>>,
     position: Position
 }
 
 impl Spot {
-    pub fn new(piece: Box<dyn Piece>, x: usize, y: usize) -> Spot{
+    pub fn new(piece: Option<Box<dyn Piece>>, x: usize, y: usize) -> Spot{
         Spot {
             piece,
             position: Position{
@@ -47,6 +47,116 @@ impl Piece for Rook {
     }
 }
 
+struct Knight {
+    sign: char,
+    white: bool
+}
+
+impl Knight {
+    pub fn new(white: bool) -> Knight {
+        if white {
+            Knight {
+                sign: 'N',
+                white
+            }
+        } else {
+            Knight {
+                sign: 'n',
+                white
+            }
+        }
+    }
+}
+
+impl Piece for Knight {
+    fn sign(&self) -> char {
+        self.sign
+    }
+}
+
+struct Bishop {
+    sign: char,
+    white: bool
+}
+
+impl Bishop {
+    pub fn new(white: bool) -> Bishop {
+        if white {
+            Bishop {
+                sign: 'B',
+                white
+            }
+        } else {
+            Bishop {
+                sign: 'b',
+                white
+            }
+        }
+    }
+}
+
+impl Piece for Bishop {
+    fn sign(&self) -> char {
+        self.sign
+    }
+}
+
+struct Queen {
+    sign: char,
+    white: bool
+}
+
+impl Queen {
+    pub fn new(white: bool) -> Queen {
+        if white {
+            Queen {
+                sign: 'Q',
+                white
+            }
+        } else {
+            Queen {
+                sign: 'q',
+                white
+            }
+        }
+    }
+}
+
+impl Piece for Queen {
+    fn sign(&self) -> char {
+        self.sign
+    }
+}
+
+
+struct King {
+    sign: char,
+    white: bool
+}
+
+impl King {
+    pub fn new(white: bool) -> King {
+        if white {
+            King {
+                sign: 'K',
+                white
+            }
+        } else {
+            King {
+                sign: 'k',
+                white
+            }
+        }
+    }
+}
+
+impl Piece for King {
+    fn sign(&self) -> char {
+        self.sign
+    }
+}
+
+
 struct Pawn {
     sign: char,
     white: bool
@@ -79,57 +189,68 @@ pub trait Piece {
 }
 
 pub struct Board {
-    boxes: Vec<Vec<Option<Spot>>>,
+    boxes: Vec<Vec<Spot>>,
 }
 
 impl Board {
     pub fn new() -> Board {
-        const NONE: Option<Spot> = None;
-        let mut boxes: Vec<Vec<Option<Spot>>> = Vec::with_capacity(8);
+        let mut boxes: Vec<Vec<Spot>> = Vec::with_capacity(8);
 
-        let mut row1: Vec<Option<Spot>> = Vec::with_capacity(8);
+        let mut row1: Vec<Spot> = Vec::with_capacity(8);
         
-        for _ in 0..8 {
-            let rook = Rook::new(false);
-            row1.push(Some(Spot::new(Box::new(rook), 0, 0)));
-        }
+        row1.push(Spot::new(Some(Box::new(Rook::new(false))), 0, 0));
+        row1.push(Spot::new(Some(Box::new(Knight::new(false))), 1, 0));
+        row1.push(Spot::new(Some(Box::new(Bishop::new(false))), 2, 0));
+        row1.push(Spot::new(Some(Box::new(Queen::new(false))), 3, 0));
+        row1.push(Spot::new(Some(Box::new(King::new(false))), 4, 0));
+        row1.push(Spot::new(Some(Box::new(Bishop::new(false))), 5, 0));
+        row1.push(Spot::new(Some(Box::new(Knight::new(false))), 6, 0));
+        row1.push(Spot::new(Some(Box::new(Rook::new(false))), 7, 0));
 
         boxes.push(row1);
 
-        let mut row2: Vec<Option<Spot>> = Vec::with_capacity(8);
+        let mut row2: Vec<Spot> = Vec::with_capacity(8);
         
-        for _ in 0..8 {
+        for i in 0..8 {
             let pawn = Pawn::new(false);
-            row2.push(Some(Spot::new(Box::new(pawn), 0, 0)));
+            row2.push(Spot::new(Some(Box::new(pawn)), i, 1));
         }
 
         boxes.push(row2);
 
-        for _ in 0..4 {
-            let row: Vec<Option<Spot>> = Vec::from([NONE; 8]);
+        for y in 2..6 {
+            let mut row: Vec<Spot> = Vec::with_capacity(8);
+            for x in 0..8 {
+                let spot = Spot::new(None, x, y);
+                row.push(spot);
+            }
             boxes.push(row);
         }
 
-        let mut row7: Vec<Option<Spot>> = Vec::with_capacity(8);
+        let mut row7: Vec<Spot> = Vec::with_capacity(8);
         
-        for _ in 0..8 {
+        for i in 0..8 {
             let pawn = Pawn::new(true);
-            row7.push(Some(Spot::new(Box::new(pawn), 0, 0)));
+            row7.push(Spot::new(Some(Box::new(pawn)), i, 6));
         }
 
         boxes.push(row7);
 
-        let mut row8: Vec<Option<Spot>> = Vec::with_capacity(8);
+        let mut row8: Vec<Spot> = Vec::with_capacity(8);
         
-        for _ in 0..8 {
-            let rook = Rook::new(true);
-            row8.push(Some(Spot::new(Box::new(rook), 0, 0)));
-        }
+        row8.push(Spot::new(Some(Box::new(Rook::new(true))), 0, 7));
+        row8.push(Spot::new(Some(Box::new(Knight::new(true))), 1, 7));
+        row8.push(Spot::new(Some(Box::new(Bishop::new(true))), 2, 7));
+        row8.push(Spot::new(Some(Box::new(Queen::new(true))), 3, 7));
+        row8.push(Spot::new(Some(Box::new(King::new(true))), 4, 7));
+        row8.push(Spot::new(Some(Box::new(Bishop::new(true))), 5, 7));
+        row8.push(Spot::new(Some(Box::new(Knight::new(true))), 6, 7));
+        row8.push(Spot::new(Some(Box::new(Rook::new(true))), 7, 7));
 
         boxes.push(row8);
 
         Board {
-            boxes
+            boxes 
         }
     }
 
@@ -139,8 +260,12 @@ impl Board {
         for  row in self.boxes.iter() {
             print!("{r}| ");
             for spot_option in row {
-                match spot_option {
-                    Some(spot) => print!("{}", spot.piece.sign() ),
+                // match spot_option {
+                //     Some(spot) => print!("{}", spot.piece.sign() ),
+                //     None => print!("*")
+                // }
+                match &spot_option.piece {
+                    Some(piece) => print!("{}", piece.sign()),
                     None => print!("*")
                 }
                 print!(" ");
