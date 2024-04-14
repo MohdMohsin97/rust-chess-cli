@@ -5,5 +5,5 @@ fn main() {
 
     board.display();
 
-    board.show_spot(1, 0);
+    board.show_spot(2, 0);
 }

@@ -3,6 +3,10 @@ struct Position {
     y: usize
 }
 
+pub trait Piece {
+    fn sign(&self) -> char;
+}
+
 pub struct Spot {
     piece: Option<Box<dyn Piece>>,
     position: Position
@@ -184,10 +188,6 @@ impl Piece for Pawn {
     }
 }
 
-pub trait Piece {
-    fn sign(&self) -> char;
-}
-
 pub struct Board {
     pub boxes: Vec<Vec<Spot>>,
 }
@@ -278,7 +278,10 @@ impl Board {
     }
 
     pub fn show_spot(&self, x: usize, y: usize) {
-        let piece = &self.boxes[x][y].piece.as_ref().unwrap().sign();
+        let piece = match &self.boxes[x][y].piece.as_ref() {
+            Some(p) => p.sign(),
+            None => 'X'
+        };
         let position = &self.boxes[x][y].position;
 
         println!("Piece = {} at x: {} & y: {}.", piece, position.x, position.y)
