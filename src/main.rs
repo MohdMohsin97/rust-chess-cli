@@ -1,9 +1,8 @@
-use chess::Board;
+use chess::Game;
 
 fn main() {
-    let board = Board::new();
+    let mut game = Game::new();
 
-    board.display();
-
-    board.show_spot(2, 0);
+    game.make_move("2a->3a");
+    game.make_move("3a->4a");
 }

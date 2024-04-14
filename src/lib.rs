@@ -288,3 +288,51 @@ impl Board {
     }
 }
 
+struct Player {
+    white: bool
+}
+
+pub struct Game {
+    board: Board,
+    player1: Player,
+    player2: Player,
+}
+
+impl Game {
+    pub fn new() -> Game {
+        let board = Board::new();
+        let player1 = Player{
+            white: true
+        };
+        let player2 = Player{
+            white: false
+        };
+        board.display();
+        Game {
+            board,
+            player1,
+            player2,
+        }
+    }
+
+    pub fn make_move(&mut self, input: &str) {
+        let parts: Vec<&str> = input.split("->").collect();
+
+        let (x1, y1) = extract_coordination(parts[0]);
+        let (x2, y2) = extract_coordination(parts[1]);
+        println!("{x1} {y1} {x2} {y2}");
+        self.board.boxes[x2][y2].piece = self.board.boxes[x1][y1].piece.take();
+
+        self.board.show_spot(x2, y2);
+        self.board.display();
+    }
+
+}
+
+fn extract_coordination(coord_str: &str) -> (usize, usize) {
+    let chars: Vec<char> = coord_str.chars().collect();
+    let x = chars[0].to_digit(10).unwrap() as usize;
+    let y = (chars[1] as usize) - ('a' as usize);
+    (8-x, y)
+}
+
