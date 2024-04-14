@@ -189,7 +189,7 @@ pub trait Piece {
 }
 
 pub struct Board {
-    boxes: Vec<Vec<Spot>>,
+    pub boxes: Vec<Vec<Spot>>,
 }
 
 impl Board {
@@ -276,4 +276,12 @@ impl Board {
         println!( " ------------------- ");
         println!("   a b c d e f g h ")
     }
+
+    pub fn show_spot(&self, x: usize, y: usize) {
+        let piece = &self.boxes[x][y].piece.as_ref().unwrap().sign();
+        let position = &self.boxes[x][y].position;
+
+        println!("Piece = {} at x: {} & y: {}.", piece, position.x, position.y)
+    }
 }
+
