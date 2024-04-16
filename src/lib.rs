@@ -8,6 +8,8 @@ struct Position {
 pub trait Piece {
     fn sign(&self) -> char;
     fn valid_move(&self, game: &mut Game, x1: usize, y1: usize, x2: usize, y2: usize) -> Result<(), Box<dyn Error>>;
+    fn give_color(&self) -> bool;
+
 }
 
 pub struct Spot {
@@ -52,11 +54,67 @@ impl Piece for Rook {
     fn sign(&self) -> char {
         self.sign
     }
-    fn valid_move(&self,board: &mut Game, x1: usize, y1: usize, x2: usize, y2: usize) -> Result<(), Box<dyn Error>> {
-        // Todo
-        Ok(())
+    fn valid_move(&self,game: &mut Game, x1: usize, y1: usize, x2: usize, y2: usize) -> Result<(), Box<dyn Error>> {
+        let (a, b, c, d);
+        
+        if x1 > x2 {
+            (a, b) = (x1 as i32, x2 as i32);
+        
+        } else {
+            (b , a) = (x1 as i32, x2 as i32);
+        }
+
+        if y1 > y2 {
+            (c, d) = (y1 as i32, y2 as i32);
+        } else {
+            (d, c) = (y1 as i32, y2 as i32);
+        }
+
+        if a - b != 0 && c - d == 0 {
+            for x  in b+1..a {
+                match &game.board.boxes[x as usize][y1].piece {
+                    Some(_) => return Err("Illegal Move!".into()),
+                    None => continue,  
+                }
+            }
+            match &game.board.boxes[x2][y2].piece {
+                Some(piece) => {
+                    if piece.give_color() != self.white {
+                        Ok(())
+                    } else {
+                        Err("Illegal Move!".into())
+                    }
+                }
+                None => Ok(())
+            }
+        } else if a - b == 0 && c - d !=0 {
+            for y  in d+1..c {
+                match &game.board.boxes[x1][y as usize].piece {
+                    Some(_) => return Err("Illegal Move!".into()),
+                    None => continue,  
+                }
+            }
+            match &game.board.boxes[x2][y2].piece {
+                Some(piece) => {
+                    if piece.give_color() != self.white {
+                        Ok(())
+                    } else {
+                        Err("Illegal Move!".into())
+                    }
+                }
+                None => Ok(())
+            }
+        } else {
+            Err("Illegal Move1!".into())
+        }
+
+    }
+
+    fn give_color(&self) -> bool {
+        self.white
     }
 }
+
 
 struct Knight {
     sign: char,
@@ -86,6 +144,9 @@ impl Piece for Knight {
     fn valid_move(&self, board: &mut Game, x1: usize, y1: usize, x2: usize, y2: usize) -> Result<(), Box<dyn Error>> {
         // Todo
         Ok(())
+    }
+    fn give_color(&self) -> bool {
+        self.white
     }
 }
 
@@ -118,6 +179,9 @@ impl Piece for Bishop {
         // Todo
         Ok(())
     }
+    fn give_color(&self) -> bool {
+        self.white
+    }
 }
 
 struct Queen {
@@ -148,6 +212,9 @@ impl Piece for Queen {
     fn valid_move(&self, board: &mut Game, x1: usize, y1: usize, x2: usize, y2: usize) -> Result<(), Box<dyn Error>> {
         // Todo
         Ok(())
+    }
+    fn give_color(&self) -> bool {
+        self.white
     }
 }
 
@@ -181,6 +248,9 @@ impl Piece for King {
         // Todo
         Ok(())
     }
+    fn give_color(&self) -> bool {
+        self.white
+    }
 }
 
 
@@ -210,13 +280,15 @@ impl Piece for Pawn {
         self.sign
     }
     fn valid_move(&self, game: &mut Game, x1: usize, y1: usize, x2: usize, y2: usize) -> Result<(), Box<dyn Error>> {
-        let mut a = x1 as i32;
-        let mut b = x2 as i32;
+        let a;
+        let b;
         let (c, d) = (y1 as i32, y2 as i32);
         
-        if !self.white {
-            (a, b) = (x2 as i32, x1 as i32);
-        } 
+        if self.white {
+            (a, b) = (x1 as i32, x2 as i32);
+        } else {
+            (b, a) = (x1 as i32, x2 as i32);
+        }
 
         if a == 6 && b == 4 && d - c == 0 {
             match &game.board.boxes[x2][y2].piece {
@@ -236,14 +308,21 @@ impl Piece for Pawn {
             }
         } else if a - b == 1 && (c - d == 1 || d - c == 1) {
             match &game.board.boxes[x2][y2].piece {
-                Some(_) => {
-                    Ok(())
+                Some(piece) => {
+                    if piece.give_color() == self.white {
+                        Err("Illegal Move".into())
+                    } else {
+                        Ok(())
+                    }
                 },
                 None => Err("Illegal Move!".into())
             }
         } else {
             Err("Illegal Move!".into())
         }
+    }
+    fn give_color(&self) -> bool {
+        self.white
     }
 }
 
@@ -319,10 +398,6 @@ impl Board {
         for  row in self.boxes.iter() {
             print!("{r}| ");
             for spot_option in row {
-                // match spot_option {
-                //     Some(spot) => print!("{}", spot.piece.sign() ),
-                //     None => print!("*")
-                // }
                 match &spot_option.piece {
                     Some(piece) => print!("{}", piece.sign()),
                     None => print!("*")
@@ -375,6 +450,7 @@ impl Game {
     }
 
     pub fn make_move(&mut self, input: &str) {
+        println!("{input}");
         let parts: Vec<&str> = input.split("->").collect();
 
         let (x1, y1) = match extract_coordination(parts[0]) {
@@ -392,32 +468,18 @@ impl Game {
             }
         };
 
-        println!("{x1} {y1} {x2} {y2}");
         if let Some(piece) = self.board.boxes[x1][y1].piece.take() {
             match piece.valid_move(self, x1, y1, x2, y2) {
                 Ok(_) => {
                     self.board.boxes[x2][y2].piece = Some(piece);    
                     self.board.display()
                 },
-                Err(e) => println!("{e}")
+                Err(e) => {
+                    self.board.boxes[x1][y1].piece = Some(piece);
+                    println!("{e}")
+                }
             }
         }
-        // match &self.board.boxes[x1][y1].piece {
-        //     Some(_) => {
-        //         match piece.valid_move(self, x1, y1, x2, y2) {
-        //             Ok(_) => self.board.display(),
-        //             Err(e) => println!("{e}")
-        //         };
-        //     },
-        //     None => {
-        //         println!("Illegal move");
-        //         return;
-        //     }
-        // };
-        // match self.board.boxes[x1][y1].piece.valid_move(self, x1, y1, x2, y2) {
-        //     Ok(_) => self.board.display(),
-        //     Err(e) => println!("{e}")
-        // }
     }
 
 }
@@ -426,7 +488,7 @@ fn extract_coordination(coord_str: &str) -> Result<(usize, usize), Box<dyn Error
     let chars: Vec<char> = coord_str.chars().collect();
     let x = chars[0].to_digit(10).unwrap() as usize;
     let y = (chars[1] as usize) - ('a' as usize);
-    if x < 8 && y < 8 {
+    if x <= 8 && y <= 8 {
         Ok((8-x, y))
     } else {
         Err("Illegal Move!".into())
