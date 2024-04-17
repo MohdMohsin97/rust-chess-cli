@@ -1,5 +1,7 @@
 use std:: result::Result;
 use std::error::Error;
+
+use regex::Regex;
 struct Position {
     x: usize,
     y: usize
@@ -9,7 +11,6 @@ pub trait Piece {
     fn sign(&self) -> char;
     fn valid_move(&self, game: &mut Game, x1: usize, y1: usize, x2: usize, y2: usize) -> Result<(), Box<dyn Error>>;
     fn give_color(&self) -> bool;
-
 }
 
 pub struct Spot {
@@ -113,6 +114,7 @@ impl Piece for Rook {
     fn give_color(&self) -> bool {
         self.white
     }
+
 }
 
 
@@ -520,76 +522,63 @@ impl Board {
     }
 }
 
-struct Player {
-    white: bool
-}
+
 
 pub struct Game {
     board: Board,
-    player1: Player,
-    player2: Player,
+    // player1: bool,
+    // player2: bool,
 }
 
 impl Game {
     pub fn new() -> Game {
         let board = Board::new();
-        let player1 = Player{
-            white: true
-        };
-        let player2 = Player{
-            white: false
-        };
+        // let player1 = true;
+        // let player2 = false;
         board.display();
         Game {
             board,
-            player1,
-            player2,
+            // player1,
+            // player2,
         }
     }
 
-    pub fn make_move(&mut self, input: &str) {
-        println!("{input}");
-        let parts: Vec<&str> = input.split("->").collect();
+    pub fn make_move(&mut self, player:bool, input: &str) -> Result<(), Box<dyn Error>> {
+        let pattern = Regex::new(r"^[1-8][a-h]->[1-8][a-h]$").unwrap();
 
-        let (x1, y1) = match extract_coordination(parts[0]) {
-            Ok((x, y)) => (x, y),
-            Err(e) => {
-                println!("{e}");
-                return;
-            }
-        };
-        let (x2, y2) = match extract_coordination(parts[1]) {
-            Ok((x, y)) => (x, y),
-            Err(e) => {
-                println!("{e}");
-                return;
-            }
-        };
+        let parts: Vec<&str>;
+
+        if pattern.is_match(input) {
+            parts = input.split("->").collect();
+        } else {
+           return  Err("Incorrect input".into())
+        }
+
+
+        let (x1, y1) =  extract_coordination(parts[0])?;
+        let (x2, y2) = extract_coordination(parts[1])?;
 
         if let Some(piece) = self.board.boxes[x1][y1].piece.take() {
-            match piece.valid_move(self, x1, y1, x2, y2) {
-                Ok(_) => {
-                    self.board.boxes[x2][y2].piece = Some(piece);    
-                    self.board.display()
-                },
-                Err(e) => {
-                    self.board.boxes[x1][y1].piece = Some(piece);
-                    println!("{e}")
-                }
+            if piece.give_color() != player {
+                self.board.boxes[x1][y1].piece = Some(piece);
+                return Err("Not your piece".into());
+            } else {
+                piece.valid_move(self, x1, y1, x2, y2)?;
+                self.board.boxes[x2][y2].piece = Some(piece);    
+                self.board.display();
+                Ok(())
             }
+        } else {
+            Err("There is no piece to move".into())
         }
     }
-
 }
+
 
 fn extract_coordination(coord_str: &str) -> Result<(usize, usize), Box<dyn Error>> {
     let chars: Vec<char> = coord_str.chars().collect();
     let x = chars[0].to_digit(10).unwrap() as usize;
     let y = (chars[1] as usize) - ('a' as usize);
-    if x <= 8 && y <= 8 {
         Ok((8-x, y))
-    } else {
-        Err("Illegal Move!".into())
-    }
 }
 
