@@ -105,7 +105,7 @@ impl Piece for Rook {
                 None => Ok(())
             }
         } else {
-            Err("Illegal Move1!".into())
+            Err("Illegal Move!".into())
         }
 
     }
@@ -141,10 +141,25 @@ impl Piece for Knight {
     fn sign(&self) -> char {
         self.sign
     }
-    fn valid_move(&self, board: &mut Game, x1: usize, y1: usize, x2: usize, y2: usize) -> Result<(), Box<dyn Error>> {
-        // Todo
-        Ok(())
+    fn valid_move(&self, game: &mut Game, x1: usize, y1: usize, x2: usize, y2: usize) -> Result<(), Box<dyn Error>> {
+        
+        if ( x1.abs_diff(x2) == 2 && y1.abs_diff(y2) == 1) || ( x1.abs_diff(x2) == 1 && y1.abs_diff(y2) == 2) {
+            match &game.board.boxes[x2][y2].piece {
+                Some(piece) => {
+                    if piece.give_color() != self.white {
+                        Ok(())
+                    } else {
+                        Err("Illegal Move!".into())
+                    }
+                },
+                None => Ok(())
+            }
+        } else {
+            Err("Illegal Move!".into())
+        }
+
     }
+
     fn give_color(&self) -> bool {
         self.white
     }
@@ -175,9 +190,42 @@ impl Piece for Bishop {
     fn sign(&self) -> char {
         self.sign
     }
-    fn valid_move(&self, board: &mut Game, x1: usize, y1: usize, x2: usize, y2: usize) -> Result<(), Box<dyn Error>> {
-        // Todo
-        Ok(())
+    fn valid_move(&self, game: &mut Game, x1: usize, y1: usize, x2: usize, y2: usize) -> Result<(), Box<dyn Error>> {
+        let (mut a, mut b, c, d) = (x1, y1 , x2 , y2);
+        
+        if (a as i32 - c as i32).abs() == (b as i32 - d as i32).abs()  {
+            for _  in 1..(a as i32 - c as i32).abs() {
+               if a > c {
+                a = a - 1;
+               } else {
+                a = a + 1;
+               }
+
+               if b > d {
+                b = b - 1;
+               } else {
+                b = b + 1;
+               }    
+               
+                match &game.board.boxes[a][b].piece {
+                    Some(_) => {
+                        return Err("Illegal Move!".into())},
+                    None => continue,  
+                }
+            }
+            match &game.board.boxes[x2][y2].piece {
+                Some(piece) => {
+                    if piece.give_color() != self.white {
+                        Ok(())
+                    } else {
+                        Err("Illegal Move!".into())
+                    }
+                }
+                None => Ok(())
+            }
+        }  else {
+            Err("Illegal Move!".into())
+        }
     }
     fn give_color(&self) -> bool {
         self.white
@@ -209,9 +257,45 @@ impl Piece for Queen {
     fn sign(&self) -> char {
         self.sign
     }
-    fn valid_move(&self, board: &mut Game, x1: usize, y1: usize, x2: usize, y2: usize) -> Result<(), Box<dyn Error>> {
-        // Todo
-        Ok(())
+    fn valid_move(&self, game: &mut Game, x1: usize, y1: usize, x2: usize, y2: usize) -> Result<(), Box<dyn Error>> {
+        let (mut a, mut b) = (x1, y1);
+        if ( x1.abs_diff(x2) == 0 ) || ( y1.abs_diff(y2) == 0 ) || ( x1.abs_diff(x2) == y1.abs_diff(y2) )  {
+            while a != x2 && b != y2 {
+                if a > x2 {
+                    a = a - 1;
+                } else if a < x2 {
+                    a = a + 1;
+                } 
+                
+                if b > y2 {
+                    b = b - 1;
+                } else if b < y2 {
+                    b = b + 1;
+                }
+                if a == x2 && b == y2 {
+                    break;
+                }
+
+                println!("{a} {b}");
+                 match &game.board.boxes[a][b].piece {
+                     Some(_) => return Err("Illegal Move!".into()),
+                     None => continue
+                 }
+            }
+            match &game.board.boxes[x2][y2].piece {
+                Some(piece) =>  {
+                    if piece.give_color() != self.white {
+                        Ok(())
+                    } else {
+                      Err("Illegal Move!".into())
+
+                    }
+                }
+                None => Ok(())
+            }
+        } else {
+            Err("Illegal Move!".into())
+        }
     }
     fn give_color(&self) -> bool {
         self.white
@@ -244,10 +328,24 @@ impl Piece for King {
     fn sign(&self) -> char {
         self.sign
     }
-    fn valid_move(&self, board: &mut Game, x1: usize, y1: usize, x2: usize, y2: usize) -> Result<(), Box<dyn Error>> {
-        // Todo
-        Ok(())
+    fn valid_move(&self, game: &mut Game, x1: usize, y1: usize, x2: usize, y2: usize) -> Result<(), Box<dyn Error>> {
+
+        if(x1.abs_diff(x2) == 1 && y1.abs_diff(y2) == 0 ) || (x1.abs_diff(x2) == 0 && y1.abs_diff(y2) == 1 ) || (x1.abs_diff(x2) == 1 && y1.abs_diff(y2) == 1 ) {
+            match &game.board.boxes[x2][y2].piece {
+                Some(piece) => {
+                    if piece.give_color() != self.white {
+                        Ok(())
+                    } else {
+                        Err("Illegal Move!".into())
+                    }
+                },
+                None => Ok(())
+            }
+        } else {
+            Err("Illegal Move!".into())
+        }
     }
+
     fn give_color(&self) -> bool {
         self.white
     }
